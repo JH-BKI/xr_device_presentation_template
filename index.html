@@ -47,20 +47,23 @@
       <!-- Ground -->
       <a-plane position="0 -0.01 0" rotation="-90 0 0" width="30" height="30" color="#333333" shadow="receive: true"></a-plane>
 
-      <!-- Camera -->
-      <a-entity id="camera" position="0 1.6 0">
-        <a-entity cursor="fuse: false; rayOrigin: mouse"
-                  raycaster="objects: .clickable"
-                  position="0 0 -1"
-                  geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-                  material="color: white; shader: flat">
+      <!-- Main Camera Rig -->
+      <a-entity id="rig" position="0 1.6 0">
+        <!-- Camera -->
+        <a-entity id="camera" camera look-controls wasd-controls>
+          <!-- Cursor -->
+          <a-entity cursor="fuse: false; rayOrigin: mouse"
+                    raycaster="objects: .clickable"
+                    position="0 0 -1"
+                    geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                    material="color: white; shader: flat">
+          </a-entity>
         </a-entity>
       </a-entity>
 
-      <!-- Movement Controls -->
-      <a-entity id="rig" movement-controls="fly: true; speed: 0.3">
-        <a-entity id="camera" camera look-controls wasd-controls position="0 1.6 0"></a-entity>
-      </a-entity>
+      <!-- VR Controllers -->
+      <a-entity id="leftHand" oculus-touch-controls="hand: left"></a-entity>
+      <a-entity id="rightHand" oculus-touch-controls="hand: right"></a-entity>
     </a-scene>
 
     <script>
@@ -70,6 +73,20 @@
           this.el.addEventListener('click', () => {
             const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
             this.el.setAttribute('color', randomColor);
+          });
+        }
+      });
+
+      // VR-specific setup
+      AFRAME.registerComponent('vr-setup', {
+        init: function () {
+          // Check if we're in VR mode
+          this.el.sceneEl.addEventListener('enter-vr', () => {
+            console.log('Entered VR mode');
+          });
+          
+          this.el.sceneEl.addEventListener('exit-vr', () => {
+            console.log('Exited VR mode');
           });
         }
       });
