@@ -124,8 +124,7 @@ AFRAME.registerComponent('device-detection', {
             let infoText = JSON.stringify(DeviceInfo, null, 2);
             textEntity.setAttribute('text', {
                 value: infoText,
-                align: 'center',
-                width: 2,
+                align: 'left',
                 color: '#FFFFFF'
             });
             console.log("updateScene > infoText",infoText);

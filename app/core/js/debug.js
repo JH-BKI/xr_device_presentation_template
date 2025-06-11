@@ -13,26 +13,16 @@ AFRAME.registerComponent('vr-console', {
 
     console.log('VR Console init');
 
-    // Create background plane
-    this.bgEl = document.createElement('a-plane');
-    this.bgEl.setAttribute('width', this.data.width + 0.2);
-    this.bgEl.setAttribute('height', 1.4);
-    this.bgEl.setAttribute('color', '#222');
-    this.bgEl.setAttribute('opacity', 0.7);
-    this.bgEl.setAttribute('side', 'double');
-    this.bgEl.setAttribute('position', '0 0 0');
-    this.el.appendChild(this.bgEl);
-
     // Create a-text child
     this.textEl = document.createElement('a-text');
-    this.textEl.setAttribute('width', this.data.width);
+    // this.textEl.setAttribute('width', this.data.width);
     this.textEl.setAttribute('color', this.data.color);
     this.textEl.setAttribute('side', 'double');
     this.textEl.setAttribute('value', 'VR Console Ready');
-    this.textEl.setAttribute('align', 'left');
-    this.textEl.setAttribute('anchor', 'left');
+    // this.textEl.setAttribute('align', 'left');
+    // this.textEl.setAttribute('anchor', 'left');
     this.textEl.setAttribute('wrap-count', '75');
-    this.textEl.setAttribute('position', '-1.5 0 0.01');
+    // this.textEl.setAttribute('position', '-1.5 0 0.01');
     this.textEl.setAttribute('scale', '0.85 0.85 0.85');
     this.el.appendChild(this.textEl);
 
@@ -110,8 +100,7 @@ AFRAME.registerComponent('vr-console', {
           let infoText = `Debug initialised`;
           textEntity.setAttribute('text', {
               value: infoText,
-              align: 'center',
-              width: 2,
+              align: 'left',
               color: '#FFFFFF'
           });
           console.log("updateScene > debugText: ",infoText);
