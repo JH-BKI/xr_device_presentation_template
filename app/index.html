@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Spatial Template</title>
+    <meta name="description" content="A-Frame VR/Desktop Demo">
+    <script src="./core/js/aframe.min.js"></script>
+    <script src="./core/js/ua-parser.pack.js"></script>
+    <script src="./core/js/components/device-detection.js"></script>
+    <link rel="stylesheet" href="./core/css/styles.css">
+  </head>
+  <body>
+    <a-scene device-detection>
+      <a-assets>
+        <!-- Preload all images, models, and other assets here -->
+        <!-- Example: <img id="texture1" src="path/to/texture.jpg"> -->
+        <!-- Example: <a-asset-item id="model1" src="path/to/model.glb"></a-asset-item> -->
+      </a-assets>
+
+      <a-sky id="sky" color="#6EBAA7"></a-sky>
+
+      <!-- Lighting (keep basic lighting) -->
+      <a-entity id="light-ambient" light="type: ambient; color: #fff; intensity: 1"></a-entity>
+      <a-entity id="light-directional" light="type: directional; color: #fff; intensity: 0.6" position="-0.5 1 1"></a-entity>
+
+      <!-- Interactive Objects (temporarily commented out for minimal test) -->
+ 
+      <a-box id="box-blue" class="clickable" clickable 
+            modular-button="debounce: 500; onactivate: myButtonAction"
+            position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9" 
+            animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+      </a-box>
+      <a-sphere id="sphere-red" class="clickable" clickable 
+            modular-button="debounce: 500; onactivate: myButtonAction"
+            position="0 1.25 -5" radius="1.25" color="#EF2D5E">
+      </a-sphere>
+      <a-cylinder id="cylinder-yellow" class="clickable" clickable 
+            modular-button="debounce: 500; onactivate: myButtonAction"
+            position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D">
+      </a-cylinder>
+      
+      
+      <a-entity 
+        id="box-red" class="clickable" clickable
+        modular-button="debounce: 500; onactivate: myTriggerOnClick"
+        position="-2 0 -2"
+        geometry="primitive: box"
+        material="color: red"
+        animation__mouseenter="property: components.material.material.color; type: color; to: blue; startEvents: mouseenter; dur: 100"
+        animation__mouseleave="property: components.material.material.color; type: color; to: red; startEvents: mouseleave; dur: 100"
+        animation__customOnClick="property: components.material.material.color; type: color; from: blue; to: yellow; startEvents: triggerOnClick; dur: 300"
+        animation__scale="property: scale; from: 1 1 1; to: 1.05 1.05 1.05; dur: 100; dir: alternate; easing: easeInOutSine; loop:1; startEvents: triggerOnClick">
+      </a-entity>
+    
+
+
+      <!-- Ground (optional: can comment out if still not visible) -->
+      <a-plane id="ground" position="0 -0.01 0" rotation="-90 0 0" width="30" height="30" color="#333333" shadow="receive: true"></a-plane>
+
+      <!-- Main Camera Rig with VR Controllers -->
+      <a-entity id="rig" position="0 0.6 0">
+        <a-entity id="camera" camera wasd-controls look-controls cursor="rayOrigin: mouse"></a-entity>
+        <a-entity id="hand-left" laser-controls="hand: left;" fixed-laser-length="length: 8" raycaster="objects: .clickable; interval: 100"></a-entity>
+        <a-entity id="hand-right" laser-controls="hand: right;" fixed-laser-length="length: 8" raycaster="objects: .clickable; interval: 100"></a-entity>
+      </a-entity>
+
+      <!-- Device Info Display -->
+      <a-entity id="device-info-text" position="0 2 -1" text="value: Loading device info..."></a-entity>
+      
+
+      <!-- VR Console Text Entity -->
+      <a-entity vr-console id="vr-console" position="3 2 -2" rotation="0 -60 0" visible="false"></a-entity>
+    </a-scene>
+
+
+    <script>
+      // Modular button component with debounce and custom function call
+      AFRAME.registerComponent('modular-button', {
+        schema: {
+          debounce: {type: 'number', default: 500}, // ms
+          onactivate: {type: 'string', default: ''} // function name
+        },
+        init: function () {
+          let lastClick = 0;
+          this.el.addEventListener('click', () => {
+            const now = Date.now();
+            if (now - lastClick < this.data.debounce) return;
+            lastClick = now;
+            if (this.data.onactivate && typeof window[this.data.onactivate] === 'function') {
+              window[this.data.onactivate](this.el);
+            }
+          });
+        }
+      });
+
+      // Example global function for button action
+      function myButtonAction(el) {
+        const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+        el.setAttribute('color', randomColor);
+        console.log('Button activated! Color changed:', randomColor);
+      }
+
+      function myTriggerOnClick(el) {
+        console.log('Button activated! start animation');
+        el.emit('triggerOnClick');
+      } 
+
+
+
+      // VR-specific setup
+      AFRAME.registerComponent('vr-setup', {
+        init: function () {
+          // Check if we're in VR mode
+          this.el.sceneEl.addEventListener('enter-vr', () => {
+            console.log('Entered VR mode');
+          });
+          
+          this.el.sceneEl.addEventListener('exit-vr', () => {
+            console.log('Exited VR mode');
+          });
+        }
+      });
+
+ 
+
+
+      window.addEventListener('DOMContentLoaded', function () {
+
+        // Dynamically load debug.js if ?debug=true is present in the URL
+        if (window.location.search.includes('debug=true')) {
+          var debugScript = document.createElement('script');
+          debugScript.src = './core/js/debug.js';
+          document.head.appendChild(debugScript);
+        }
+
+
+        const aframeScene = document.querySelector('a-scene');
+
+        // Log raycaster intersections to VR console
+        aframeScene.addEventListener('raycaster-intersection', function (evt) {
+          if (evt.detail.els && evt.detail.els.length > 0) {
+            const hitEl = evt.detail.els[0];
+            console.log('Raycaster hit: ', 'id#['+hitEl.getAttribute('id')+']  ' || '[no-id]  ', 'tag['+hitEl.tagName, '  classes['+hitEl.getAttribute('class')+']' || '[no-class]');
+          } else {
+            console.log('Raycaster not hitting any element');
+          }
+        });
+      });
+
+
+
+      AFRAME.registerComponent('fixed-laser-length', {
+        schema: {
+          length: {default: 'auto'} // 'auto' or a number as a string
+        },
+        init: function () {
+          const el = this.el;
+          let lastColor = 'white';
+          let forceLength = null;
+
+          // Helper to set laser color
+          function setColor(color) {
+            const lineObj = el.getObject3D('line');
+            if (lineObj && lineObj.material) {
+              lineObj.material.color.set(color);
+              lineObj.visible = true;
+              lastColor = color;
+            }
+          }
+
+          // Helper to set laser length
+          function setLaserLength(length) {
+            const lineObj = el.getObject3D('line');
+            if (lineObj && lineObj.geometry) {
+              const positions = lineObj.geometry.attributes.position.array;
+              positions[0] = 0; positions[1] = 0; positions[2] = 0;
+              positions[3] = 0; positions[4] = 0; positions[5] = -length;
+              lineObj.geometry.attributes.position.needsUpdate = true;
+            }
+          }
+
+          // Poll for the line mesh if not available yet
+          function ensureLine() {
+            const lineObj = el.getObject3D('line');
+            if (!lineObj || !lineObj.material || !lineObj.geometry) {
+              setTimeout(ensureLine, 100);
+            } else {
+              setColor('white');
+              if (forceLength !== null) setLaserLength(forceLength);
+            }
+          }
+          ensureLine();
+
+          // On intersection, set color to blue
+          el.addEventListener('raycaster-intersection', function () {
+            setColor('blue');
+          });
+
+          // On intersection cleared, set color to white
+          el.addEventListener('raycaster-intersection-cleared', function () {
+            setColor('white');
+          });
+
+          // Always force the laser to the fixed length on every frame if not auto
+          this.el.sceneEl.addEventListener('renderstart', () => {
+            this.el.sceneEl.addEventListener('tick', () => {
+              if (forceLength !== null) setLaserLength(forceLength);
+            });
+          });
+
+          // Also update color if the controller is reconnected
+          el.addEventListener('controllerconnected', function () {
+            setTimeout(() => {
+              setColor(lastColor);
+              if (forceLength !== null) setLaserLength(forceLength);
+            }, 100);
+          });
+
+          // Determine mode
+          if (this.data.length === 'auto') {
+            // Default A-Frame behavior, but set maxLength to 10 if not already set
+            if (!el.hasAttribute('laser-controls') || !el.getAttribute('laser-controls').includes('maxLength')) {
+              el.setAttribute('laser-controls', (el.getAttribute('laser-controls') || '') + '; maxLength: 10');
+            }
+            forceLength = null;
+          } else {
+            // Force fixed length
+            forceLength = parseFloat(this.data.length);
+          }
+        }
+      });
+
+      // VR session event listeners for debugging
+      document.querySelector('a-scene').addEventListener('enter-vr', () => {
+        console.log('Attempting to enter VR...');
+      });
+      document.querySelector('a-scene').addEventListener('enter-vr-success', () => {
+        console.log('Successfully entered VR!');
+      });
+    </script>
+  </body>
+</html> 
