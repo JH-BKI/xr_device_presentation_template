@@ -38,6 +38,95 @@ AFRAME.registerComponent('device-detection', {
 
         this.uaParser = new UAParser();
         this.updateDeviceInfo();
+        this.setupKeyHandler();
+        this.setupInfoButton();
+    },
+
+    setupInfoButton: function() {
+        // Create info button
+        this.infoButton = document.createElement('button');
+        this.infoButton.innerHTML = 'Device Info';
+        this.infoButton.style.position = 'fixed';
+        this.infoButton.style.bottom = '20px';
+        this.infoButton.style.left = '20px';
+        this.infoButton.style.zIndex = '999';
+        this.infoButton.style.padding = '10px 20px';
+        this.infoButton.style.background = 'rgba(0, 0, 0, 0.5)';
+        this.infoButton.style.color = 'white';
+        this.infoButton.style.border = 'none';
+        this.infoButton.style.borderRadius = '5px';
+        this.infoButton.style.cursor = 'pointer';
+        this.infoButton.style.fontFamily = 'Arial, sans-serif';
+        this.infoButton.style.fontSize = '14px';
+        this.infoButton.style.transition = 'background 0.3s ease';
+
+        // Add hover effect
+        this.infoButton.onmouseover = () => {
+            this.infoButton.style.background = 'rgba(0, 0, 0, 0.7)';
+        };
+        this.infoButton.onmouseout = () => {
+            this.infoButton.style.background = 'rgba(0, 0, 0, 0.5)';
+        };
+
+        // Add click handler
+        this.infoButton.onclick = () => this.showDeviceInfoDialog();
+
+        // Add to document
+        document.body.appendChild(this.infoButton);
+    },
+
+    setupKeyHandler: function() {
+        // Create dialog element
+        this.dialog = document.createElement('dialog');
+        this.dialog.style.padding = '20px';
+        this.dialog.style.borderRadius = '8px';
+        this.dialog.style.border = '1px solid #ccc';
+        this.dialog.style.maxWidth = '80%';
+        this.dialog.style.maxHeight = '80%';
+        this.dialog.style.overflow = 'auto';
+        document.body.appendChild(this.dialog);
+
+        // Add close button
+        const closeButton = document.createElement('button');
+        closeButton.innerHTML = 'Close';
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '10px';
+        closeButton.style.right = '10px';
+        closeButton.style.padding = '5px 10px';
+        closeButton.style.background = 'rgba(0, 0, 0, 0.5)';
+        closeButton.style.color = 'white';
+        closeButton.style.border = 'none';
+        closeButton.style.borderRadius = '3px';
+        closeButton.style.cursor = 'pointer';
+        closeButton.onclick = () => this.dialog.close();
+        this.dialog.appendChild(closeButton);
+
+        // Add keypress handler
+        document.addEventListener('keydown', (event) => {
+            if (event.key.toLowerCase() === 'l') {
+                this.showDeviceInfoDialog();
+            }
+        });
+    },
+
+    showDeviceInfoDialog: function() {
+        // Create formatted content
+        const content = document.createElement('pre');
+        content.style.margin = '0';
+        content.style.padding = '20px';
+        content.style.fontFamily = 'monospace';
+        content.style.whiteSpace = 'pre-wrap';
+        content.style.wordBreak = 'break-word';
+        content.textContent = JSON.stringify(DeviceInfo, null, 2);
+
+        // Clear previous content and add new content
+        while (this.dialog.children.length > 1) {
+            this.dialog.removeChild(this.dialog.lastChild);
+        }
+        this.dialog.appendChild(content);
+
+        // Show dialog
+        this.dialog.showModal();
     },
     
     updateDeviceInfo: function() {
