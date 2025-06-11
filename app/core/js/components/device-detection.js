@@ -1,129 +1,127 @@
-AFRAME.registerComponent('device-detection', {
+// Global namespace for device information
+window.DeviceInfo = {
+    device: 'unknown',
+    model: 'unknown',
+    browser: 'unknown',
+    os: 'unknown',
+    bestGuess: 'unknown',
+    completeUA: 'unknown',
+    presentationOptions: [],
+    isMobile: function() { return AFRAME.utils.device.isMobile(); },
+    isTablet: function() { return AFRAME.utils.device.isTablet(); },
+    isMobileVR: function() { return AFRAME.utils.device.isMobileVR(); },
+    isHeadsetConnected: function() { return AFRAME.utils.device.checkHeadsetConnected(); }
+};
 
+// Presentation Options Component
+AFRAME.registerComponent('presentation-options', {
+    schema: {
+        options: {type: 'array', default: []}
+    },
+    init: function() {
+        // Add each option as a component to the scene and class to body
+        this.data.options.forEach(option => {
+            this.el.setAttribute(option, 'enabled: true');
+            document.body.classList.add(option);
+            console.log(`Added presentation option: ${option}`);
+        });
+    }
+});
+
+// Device Detection Component
+AFRAME.registerComponent('device-detection', {
     init: function() {
         if (typeof UAParser === 'undefined') {
             console.error('UAParser is not loaded!');
             return;
         }
 
-        this.deviceInfo = {
-            device: 'unknown',
-            model: 'unknown',
-            browser: 'unknown',
-            os: 'unknown',
-            bestGuess: 'unknown',
-            presentationOptions: []
-        };
         this.uaParser = new UAParser();
         this.updateDeviceInfo();
     },
     
-    getDeviceType: function() {
-        
-
-
-
-        const device = this.uaParser.getDevice();
-        //console.log("getDeviceType > device: ",device);
-        
-        const ua = this.uaParser.getUA();
-        //console.log("getDeviceType > ua: ",ua);
-        
-        
-        // device.type can be 'mobile', 'tablet', 'smarttv', 'wearable', 'embedded', or undefined (desktop)
-        if (device.type === 'mobile') return 'mobile';
-        if (device.type === 'tablet') return 'tablet';
-        if (device.type === 'smarttv' || device.type === 'wearable' || device.type === 'embedded') return device.type;
-        // Headset detection: check for known VR/AR brands/models in device/vendor/model/ua
-        if (/OculusBrowser|Quest|Pico|Vive|Valve|Windows MR/i.test(ua)) return 'headset';
-        return 'desktop';
-    },
-
     updateDeviceInfo: function() {
-
-        let UAData = this.uaParser.getResult();
-        console.log("getDeviceType > UAData: ",JSON.stringify(UAData, null, 2));
-
         // Get browser info
         function getBrowserInfo(uaData) {         
             const { name, version} = uaData;
-            return `${name}|${version}`;
+            return `${name}|v:${version}`;
         }
         // Get device info
         function getDeviceInfo(uaData) {         
             const { type, vendor} = uaData;
-            return `${type}|${vendor}`;
+            return `${type || 'unknown'}|${vendor || 'unknown'}`;
         }
         // Get model info
         function getModelInfo(uaData) {         
             const { model} = uaData;
-            return `${model}`;
+            return `${model || 'unknown'}`;
         }
         // Get os info
         function getOSInfo(uaData) {         
             const { name, version} = uaData;
-            return `${name}|${version}`;
+            return `${name || 'unknown'}|v:${version || 'unknown'}`;
         }
-        this.deviceInfo.device = getDeviceInfo(this.uaParser.getDevice());  
-        this.deviceInfo.model = getModelInfo(this.uaParser.getDevice()); 
-        this.deviceInfo.browser = getBrowserInfo(this.uaParser.getBrowser());
-        this.deviceInfo.os = getOSInfo(this.uaParser.getOS());
-        
 
-        //this.deviceInfo.bestGuess = this.getDeviceType();
-        
+        // Get best guess with proper context
+        const getBestGuess = (uaData) => {         
+            let device = uaData.device.split('|')[0];
+            let vendor = uaData.device.split('|')[1];
+            let model = uaData.model;
 
-        //   this.deviceInfo.presentationOptions = [];
+            DeviceInfo.presentationOptions = ['browser-mode'];
+            console.log("getBestGuess > os: ",uaData.os);
+            
+            if (device === 'mobile' || device === 'tablet') {
+                DeviceInfo.presentationOptions.push('ar-mode');
+            }
+            else if (device === 'xr') {
+                DeviceInfo.presentationOptions.push('vr-mode');
+            }
+            else if (!device || device === 'unknown') {
+                device = 'desktop-laptop';
+                if (model === 'unknown') {
+                    switch (uaData.os.split('|')[0]) {
+                        case 'Windows':
+                            model = 'PC';
+                            break;
+                        case 'Macintosh':
+                            model = 'Mac';
+                            break;
+                        case 'Linux':
+                            model = 'Linux';
+                            break;
+                        default:
+                            model = 'unknown';
+                            break;
+                    }
+                }
+                DeviceInfo.device = device+'|'+vendor;
+            }
 
-        // // Use UAParser for device and OS
-        // const device = this.uaParser.getDevice();
-        // const os = this.uaParser.getOS();
-        // this.deviceInfo.type = this.getDeviceType();
-        // this.deviceInfo.os = os.name || 'unknown';
-        // // Reset presentation options
-        
-        // this.deviceInfo.presentationOptions = ['fullscreen-support'];
-        
-        // // Browser-level XR support
-        // if (navigator.xr && navigator.xr.isSessionSupported) {
-            //     navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
-                //         if (supported && !this.deviceInfo.presentationOptions.includes('vr')) {
-                    //             this.deviceInfo.presentationOptions.push('vr');
-                    //             this.updateScene();
-                    //         }
-                    //     });
-                    //     navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-                        //         if (supported && !this.deviceInfo.presentationOptions.includes('ar')) {
-                            //             this.deviceInfo.presentationOptions.push('ar');
-                            //             this.updateScene();
-                            //         }
-                            //     });
-                            // }
-                            
-                            
-        // switch(this.deviceInfo.type){
-        //     case 'mobile':
-        //         this.deviceInfo.presentationOptions.push('ar-support');
-        //         break;
-        //     case 'tablet':
-        //         this.deviceInfo.presentationOptions.push('ar-support');
-        //         break;  
-        //     case 'headset':
-        //         this.deviceInfo.presentationOptions.push('vr-support');
-        //         break;
-        //     default:
-        //         break;
-        // }
-        // Update body class
+            return `Device: ${device}|Model: ${model}|OS: ${uaData.os}|Vendor: ${vendor}|Browser: ${uaData.browser}`;
+        };
+
+        // Update global device info
+        DeviceInfo.device = getDeviceInfo(this.uaParser.getDevice());  
+        DeviceInfo.model = getModelInfo(this.uaParser.getDevice()); 
+        DeviceInfo.browser = getBrowserInfo(this.uaParser.getBrowser());
+        DeviceInfo.os = getOSInfo(this.uaParser.getOS());
+        DeviceInfo.bestGuess = getBestGuess(DeviceInfo);
+        DeviceInfo.completeUA = this.uaParser.getResult();
+
+        console.log("isMobile: ", DeviceInfo.isMobile()); 
+        console.log("isTablet: ", DeviceInfo.isTablet());
+        console.log("isMobileVR: ", DeviceInfo.isMobileVR());
+        console.log("checkHeadsetConnected: ", DeviceInfo.isHeadsetConnected());
+
+        // Update scene with detected modes
         this.updateScene();        
-
     },
 
     updateScene: function() {
         const textEntity = document.querySelector('#device-info-text');
         if (textEntity) {
-            // let infoText = `Device: ${this.deviceInfo.type}\nModel: ${this.deviceInfo.model}\nOS: ${this.deviceInfo.os}\nOptions: ${this.deviceInfo.presentationOptions.join(', ')}`;
-            let infoText = JSON.stringify(this.deviceInfo, null, 2);
+            let infoText = JSON.stringify(DeviceInfo, null, 2);
             textEntity.setAttribute('text', {
                 value: infoText,
                 align: 'center',
@@ -132,7 +130,21 @@ AFRAME.registerComponent('device-detection', {
             });
             console.log("updateScene > infoText",infoText);
         }
-        // document.body.className = `${this.deviceInfo.type} ${this.deviceInfo.os} ${this.deviceInfo.presentationOptions.join(' ')}`;
 
+        // Initialize presentation options component with detected modes
+        this.el.sceneEl.setAttribute('presentation-options', {
+            options: DeviceInfo.presentationOptions
+        });
+
+        // Enable appropriate modes based on device capabilities
+        if (DeviceInfo.presentationOptions.includes('browser-mode')) {
+            this.el.sceneEl.setAttribute('browser-mode', 'enabled: true');
+        }
+        if (DeviceInfo.presentationOptions.includes('vr-mode')) {
+            this.el.sceneEl.setAttribute('vr-mode', 'enabled: true');
+        }
+        if (DeviceInfo.presentationOptions.includes('ar-mode')) {
+            this.el.sceneEl.setAttribute('ar-mode', 'enabled: true');
+        }
     }
 }); 
