@@ -6,6 +6,11 @@ AFRAME.registerComponent('vr-console', {
     color: {type: 'string', default: '#FFF'}
   },
   init: function () {
+    if (!this.el.sceneEl) {
+      console.error('VR Console: No scene element found');
+      return;
+    }
+
     console.log('VR Console init');
 
     // Create background plane
@@ -35,7 +40,9 @@ AFRAME.registerComponent('vr-console', {
     const self = this;
 
     function updateVRConsole() {
-      self.textEl.setAttribute('value', self.logLines.join('\n'));
+      if (self.textEl) {
+        self.textEl.setAttribute('value', self.logLines.join('\n'));
+      }
     }
 
     function pushLine(type, ...args) {
@@ -70,35 +77,51 @@ AFRAME.registerComponent('vr-console', {
 
     // Listen for X/A button presses to toggle visibility
     this.toggleHandler = (evt) => {
+      if (!this.el) return;
+      
       // evt.detail is a GamepadEvent
       // evt.detail.pressed is true when pressed
       // evt.detail.id is the button index
       // X (button 3) on left, A (button 4) on right (Oculus Touch)
-      // We'll toggle on either
       if (evt.detail && evt.detail.pressed && (evt.detail.id === 3 || evt.detail.id === 4)) {
-        const vrConsole = document.getElementById('vr-console');
-        if (vrConsole) {
-          vrConsole.setAttribute('visible', !(vrConsole.getAttribute('visible') === true || vrConsole.getAttribute('visible') === 'true'));
-        }
+        this.el.setAttribute('visible', !(this.el.getAttribute('visible') === true || this.el.getAttribute('visible') === 'true'));
       }
     };
-    this.el.sceneEl.addEventListener('abuttondown', this.toggleHandler);
-    this.el.sceneEl.addEventListener('xbuttondown', this.toggleHandler);
 
     // Listen for 'p' key to toggle visibility
     this.keyHandler = (evt) => {
+      if (!this.el) return;
+      
       if (evt.key === 'p' || evt.key === 'P') {
-        const vrConsole = document.getElementById('vr-console');
-        if (vrConsole) {
-          vrConsole.setAttribute('visible', !(vrConsole.getAttribute('visible') === true || vrConsole.getAttribute('visible') === 'true'));
-        }
+        this.el.setAttribute('visible', !(this.el.getAttribute('visible') === true || this.el.getAttribute('visible') === 'true'));
       }
     };
-    window.addEventListener('keydown', this.keyHandler);
+
+    // Add event listeners
+    if (this.el.sceneEl) {
+      this.el.sceneEl.addEventListener('abuttondown', this.toggleHandler.bind(this));
+      this.el.sceneEl.addEventListener('xbuttondown', this.toggleHandler.bind(this));
+    }
+    window.addEventListener('keydown', this.keyHandler.bind(this));
+  },
+  updateScene: function() {
+      const textEntity = document.querySelector('#debug-info-text');
+      if (textEntity) {
+          let infoText = `Debug initialised`;
+          textEntity.setAttribute('text', {
+              value: infoText,
+              align: 'center',
+              width: 2,
+              color: '#FFFFFF'
+          });
+          console.log("updateScene > debugText: ",infoText);
+      }
   },
   remove: function () {
-    this.el.sceneEl.removeEventListener('abuttondown', this.toggleHandler);
-    this.el.sceneEl.removeEventListener('xbuttondown', this.toggleHandler);
+    if (this.el && this.el.sceneEl) {
+      this.el.sceneEl.removeEventListener('abuttondown', this.toggleHandler);
+      this.el.sceneEl.removeEventListener('xbuttondown', this.toggleHandler);
+    }
     window.removeEventListener('keydown', this.keyHandler);
   }
 }); 

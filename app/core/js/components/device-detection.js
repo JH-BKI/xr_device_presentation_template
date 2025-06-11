@@ -8,6 +8,7 @@ AFRAME.registerComponent('device-detection', {
 
         this.deviceInfo = {
             type: 'unknown',
+            model: 'unknown',
             os: 'unknown',
             presentationOptions: []
         };
@@ -18,13 +19,19 @@ AFRAME.registerComponent('device-detection', {
     },
 
     getDeviceType: function() {
+
+        let overriddenType;
         const device = this.uaParser.getDevice();
+        console.log("getDeviceType > device: ",device);
+        const ua = this.uaParser.getUA();
+        console.log("getDeviceType > ua: ",ua);
+
+
         // device.type can be 'mobile', 'tablet', 'smarttv', 'wearable', 'embedded', or undefined (desktop)
         if (device.type === 'mobile') return 'mobile';
         if (device.type === 'tablet') return 'tablet';
         if (device.type === 'smarttv' || device.type === 'wearable' || device.type === 'embedded') return device.type;
         // Headset detection: check for known VR/AR brands/models in device/vendor/model/ua
-        const ua = this.uaParser.getUA();
         if (/OculusBrowser|Quest|Pico|Vive|Valve|Windows MR/i.test(ua)) return 'headset';
         return 'desktop';
     },
@@ -74,7 +81,8 @@ AFRAME.registerComponent('device-detection', {
     updateScene: function() {
         const textEntity = document.querySelector('#device-info-text');
         if (textEntity) {
-            let infoText = `Device: ${this.deviceInfo.type}\nOS: ${this.deviceInfo.os}\nOptions: ${this.deviceInfo.presentationOptions.join(', ')}`;
+            // let infoText = `Device: ${this.deviceInfo.type}\nModel: ${this.deviceInfo.model}\nOS: ${this.deviceInfo.os}\nOptions: ${this.deviceInfo.presentationOptions.join(', ')}`;
+            let infoText = JSON.stringify(this.uaParser.getResult(), null, 2);
             textEntity.setAttribute('text', {
                 value: infoText,
                 align: 'center',
