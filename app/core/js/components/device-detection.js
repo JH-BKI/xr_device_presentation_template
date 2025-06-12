@@ -200,7 +200,7 @@ AFRAME.registerComponent('device-detection', {
         DeviceInfo.bestGuess = getBestGuess(DeviceInfo);
         DeviceInfo.completeUA = this.uaParser.getResult();
 		DeviceInfo.random = `isMobile(): ${DeviceInfo.isMobile()} | isTablet(): ${DeviceInfo.isTablet()} | isMobileVR(): ${DeviceInfo.isMobileVR()} | isHeadsetConnected(): ${DeviceInfo.isHeadsetConnected()}`;
-		DeviceInfo.jsnavigator = `navigator.appName(): ${navigator.appName} | navigator.appVersion(): ${navigator.appVersion} | navigator.appCodeName(): ${navigator.appCodeName} | navigator.platform(): ${navigator.platform}`;
+		DeviceInfo.jsnavigator = `navigator.maxTouchPoints(): ${navigator.maxTouchPoints} | navigator.appName(): ${navigator.appName} | navigator.appVersion(): ${navigator.appVersion} | navigator.appCodeName(): ${navigator.appCodeName} | navigator.platform(): ${navigator.platform}`;
         // Update scene with detected modes
         this.updateScene();        
     },
