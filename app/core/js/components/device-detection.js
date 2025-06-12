@@ -7,6 +7,8 @@ window.DeviceInfo = {
     bestGuess: 'unknown',
     completeUA: 'unknown',
     presentationOptions: [],
+	random: '---',
+	jsnavigator:'---',
     isMobile: function() { return AFRAME.utils.device.isMobile(); },
     isTablet: function() { return AFRAME.utils.device.isTablet(); },
     isMobileVR: function() { return AFRAME.utils.device.isMobileVR(); },
@@ -197,12 +199,8 @@ AFRAME.registerComponent('device-detection', {
         DeviceInfo.os = getOSInfo(this.uaParser.getOS());
         DeviceInfo.bestGuess = getBestGuess(DeviceInfo);
         DeviceInfo.completeUA = this.uaParser.getResult();
-
-        console.log("isMobile: ", DeviceInfo.isMobile()); 
-        console.log("isTablet: ", DeviceInfo.isTablet());
-        console.log("isMobileVR: ", DeviceInfo.isMobileVR());
-        console.log("checkHeadsetConnected: ", DeviceInfo.isHeadsetConnected());
-
+		DeviceInfo.random = `isMobile(): ${DeviceInfo.isMobile()} | isTablet(): ${DeviceInfo.isTablet()} | isMobileVR(): ${DeviceInfo.isMobileVR()} | isHeadsetConnected(): ${DeviceInfo.isHeadsetConnected()}`;
+		DeviceInfo.jsnavigator = `navigator.appName(): ${navigator.appName} | navigator.appVersion(): ${navigator.appVersion} | navigator.appCodeName(): ${navigator.appCodeName} | navigator.platform(): ${navigator.platform}`;
         // Update scene with detected modes
         this.updateScene();        
     },
